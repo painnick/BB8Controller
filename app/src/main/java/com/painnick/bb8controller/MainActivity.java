@@ -2,6 +2,7 @@ package com.painnick.bb8controller;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     BluetoothAdapter btAdapter;
     Set<BluetoothDevice> pairedDevices;
     BluetoothSocket btSocket = null;
+    String targetAddress = null;
     ConnectedThread connectedThread;
     private final BroadcastReceiver btReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -69,7 +71,22 @@ public class MainActivity extends AppCompatActivity {
                 if (BLUETOOTH_NAME.equals(deviceName)) {
                     connectBt(deviceHardwareAddress);
                 }
+            } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
+                String deviceAddress = device.getAddress();
+                Log.d(TAG, String.format("CONNECT %s Target:%s", deviceAddress, targetAddress));
+                if(targetAddress != null && targetAddress.equals(deviceAddress)) {
+                    Toast.makeText(context, "BB-8 연결에 성공하였습니다.", Toast.LENGTH_SHORT).show();
+                }
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
+                String deviceAddress = device.getAddress();
+                Log.d(TAG, String.format("DISCONNECT %s Target:%s", deviceAddress, targetAddress));
+                if(targetAddress != null && targetAddress.equals(deviceAddress)) {
+                    Toast.makeText(context, "BB-8과의 연결이 종료되었습니다.", Toast.LENGTH_SHORT).show();
+                }
             }
+
         }
     };
 
@@ -79,7 +96,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Show paired devices
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         registerReceiver(btReceiver, filter);
 
         ActivityCompat.requestPermissions(MainActivity.this, REQUIRED_PERMISSIONS, 1);
@@ -154,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void connectBt(String foundAddress) {
+        targetAddress = foundAddress;
         BluetoothDevice device = btAdapter.getRemoteDevice(foundAddress);
 
         boolean connected = false;
