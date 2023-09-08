@@ -1,7 +1,6 @@
 package com.painnick.bb8controller;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -13,7 +12,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,7 +19,6 @@ import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
@@ -30,20 +27,24 @@ public class MainActivity extends AppCompatActivity {
     static final String TAG = "Main";
 
     static final String BLUETOOTH_NAME = "VR-Trainer";
+
     // Get permission
     static final String[] REQUIRED_PERMISSIONS = {
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN,
             Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.BLUETOOTH_SCAN
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
     };
+
     static final int REQUEST_ENABLE_BT = 1;
-    static final int REQUEST_SCAN_BT = 2;
     UUID BT_MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // "random" unique identifier
     BluetoothAdapter btAdapter;
     Set<BluetoothDevice> pairedDevices;
-    ArrayAdapter<String> btArrayAdapter;
-    ArrayList<String> deviceAddressArray;
+    BluetoothSocket btSocket = null;
+    ConnectedThread connectedThread;
     private final BroadcastReceiver btReceiver = new BroadcastReceiver() {
-        @SuppressLint("MissingPermission")
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
@@ -51,16 +52,26 @@ public class MainActivity extends AppCompatActivity {
                 // object and its info from the Intent.
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
                 assert device != null;
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
                 String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
-                btArrayAdapter.add(deviceName);
-                deviceAddressArray.add(deviceHardwareAddress);
-                btArrayAdapter.notifyDataSetChanged();
+
+                Log.i(TAG, "FOUND '" + deviceName + "'(" + deviceHardwareAddress + ")");
+                if (BLUETOOTH_NAME.equals(deviceName)) {
+                    connectBt(deviceHardwareAddress);
+                }
             }
         }
     };
-    BluetoothSocket btSocket = null;
-    ConnectedThread connectedThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,10 +79,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Show paired devices
-        btArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
-        deviceAddressArray = new ArrayList<>();
-//        listView.setAdapter(btArrayAdapter); // TODO
-
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         registerReceiver(btReceiver, filter);
 
@@ -82,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         btAdapter = btManager.getAdapter();
         if (!btAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
                 // here to request the missing permissions, and then overriding
@@ -108,24 +115,23 @@ public class MainActivity extends AppCompatActivity {
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, "블루투스를 켜주세요.", Toast.LENGTH_SHORT).show();
             }
-        } else if (requestCode == REQUEST_SCAN_BT) {
-            if (resultCode == RESULT_OK) {
-                // 연결 시도
-            } else if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(this, "블루투스 BB-8을 패어링 해주세요.", Toast.LENGTH_SHORT).show();
-            }
         }
     }
 
-    @SuppressLint("MissingPermission")
     protected void fillPaired() {
-        btArrayAdapter.clear();
-        if (deviceAddressArray != null && !deviceAddressArray.isEmpty()) {
-            deviceAddressArray.clear();
-        }
         boolean found = false;
         String foundAddress = null;
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         pairedDevices = btAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
             // There are paired devices. Get the name and address of each paired device.
@@ -136,40 +142,65 @@ public class MainActivity extends AppCompatActivity {
                     found = true;
                     foundAddress = deviceHardwareAddress;
                 }
-                btArrayAdapter.add(deviceName);
-                deviceAddressArray.add(deviceHardwareAddress);
             }
         }
         if (found) {
-            BluetoothDevice device = btAdapter.getRemoteDevice(foundAddress);
-
-            boolean connected = false;
-            try {
-                btSocket = createBluetoothSocket(device);
-                btSocket.connect();
-                connected = true;
-            } catch (IOException e) {
-//                flag = false;
-//                textStatus.setText("connection failed!");
-                e.printStackTrace();
-            }
-
-            if (connected) {
-                connectedThread = new ConnectedThread(btSocket);
-                connectedThread.start();
-            }
+            connectBt(foundAddress);
         } else {
             Toast.makeText(this, "블루투스 BB-8을 패어링 해주세요.", Toast.LENGTH_SHORT).show();
+            btAdapter.cancelDiscovery();
+            btAdapter.startDiscovery();
         }
     }
 
-    @SuppressLint("MissingPermission")
+    private void connectBt(String foundAddress) {
+        BluetoothDevice device = btAdapter.getRemoteDevice(foundAddress);
+
+        boolean connected = false;
+        try {
+            btSocket = createBluetoothSocket(device);
+            if (btSocket != null) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                btSocket.connect();
+                connected = true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (connected) {
+            connectedThread = new ConnectedThread(btSocket);
+            connectedThread.start();
+        } else {
+            Toast.makeText(this, "블루투스 BB-8 연결에 실패하였습니다.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         try {
             final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
             return (BluetoothSocket) m.invoke(device, BT_MODULE_UUID);
         } catch (Exception e) {
             Log.e(TAG, "Could not create Insecure RFComm Connection", e);
+        }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return null;
         }
         return device.createRfcommSocketToServiceRecord(BT_MODULE_UUID);
     }
