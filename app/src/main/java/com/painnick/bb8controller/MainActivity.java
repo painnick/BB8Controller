@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                 String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
 
-                Log.i(TAG, "FOUND '" + deviceName + "'(" + deviceHardwareAddress + ")");
+                Log.d(TAG, "FOUND '" + deviceName + "'(" + deviceHardwareAddress + ")");
                 if (BLUETOOTH_NAME.equals(deviceName)) {
                     connectBt(deviceHardwareAddress);
                 }
@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
         if (found) {
             connectBt(foundAddress);
         } else {
-            Toast.makeText(this, "블루투스 BB-8을 패어링 해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "블루투스 BB-8을 검색합니다...", Toast.LENGTH_SHORT).show();
             btAdapter.cancelDiscovery();
             btAdapter.startDiscovery();
         }
