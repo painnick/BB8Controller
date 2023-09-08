@@ -2,7 +2,6 @@ package com.painnick.bb8controller;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
@@ -12,9 +11,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -46,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     BluetoothSocket btSocket = null;
     String targetAddress = null;
     ConnectedThread connectedThread;
+    ConnectThreadHandler connectedThreadHandler;
+
     private final BroadcastReceiver btReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -75,14 +80,14 @@ public class MainActivity extends AppCompatActivity {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
                 String deviceAddress = device.getAddress();
                 Log.d(TAG, String.format("CONNECT %s Target:%s", deviceAddress, targetAddress));
-                if(targetAddress != null && targetAddress.equals(deviceAddress)) {
+                if (targetAddress != null && targetAddress.equals(deviceAddress)) {
                     Toast.makeText(context, "BB-8 연결에 성공하였습니다.", Toast.LENGTH_SHORT).show();
                 }
             } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
                 String deviceAddress = device.getAddress();
                 Log.d(TAG, String.format("DISCONNECT %s Target:%s", deviceAddress, targetAddress));
-                if(targetAddress != null && targetAddress.equals(deviceAddress)) {
+                if (targetAddress != null && targetAddress.equals(deviceAddress)) {
                     Toast.makeText(context, "BB-8과의 연결이 종료되었습니다.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -198,13 +203,13 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         if (connected) {
-            connectedThread = new ConnectedThread(btSocket);
+            connectedThreadHandler = new ConnectThreadHandler();
+            connectedThread = new ConnectedThread(btSocket, connectedThreadHandler);
             connectedThread.start();
         } else {
             Toast.makeText(this, "블루투스 BB-8 연결에 실패하였습니다.", Toast.LENGTH_SHORT).show();
         }
     }
-
 
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         try {
@@ -231,5 +236,21 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         // Don't forget to unregister the ACTION_FOUND receiver.
         unregisterReceiver(btReceiver);
+    }
+
+    class ConnectThreadHandler extends Handler {
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+
+            Bundle bundle = msg.getData();
+            String value = bundle.getString("value");
+
+            // 핸들러 내에서 변경을 하기에 가능하다.
+            TextView textBtLog = findViewById(R.id.text_bt_log);
+            if (textBtLog != null) {
+                textBtLog.append(value);
+            }
+        }
     }
 }

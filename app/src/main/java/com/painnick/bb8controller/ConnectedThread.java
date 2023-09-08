@@ -2,6 +2,9 @@ package com.painnick.bb8controller;
 
 
 import android.bluetooth.BluetoothSocket;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -17,7 +20,11 @@ public class ConnectedThread extends Thread {
     private final InputStream mmInStream;
     private final OutputStream mmOutStream;
 
-    public ConnectedThread(BluetoothSocket socket) {
+    protected Handler handler;
+
+    public ConnectedThread(BluetoothSocket socket, Handler handler) {
+        this.handler = handler;
+
         mmSocket = socket;
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
@@ -49,7 +56,15 @@ public class ConnectedThread extends Thread {
                     bytes = mmInStream.available(); // how many bytes are ready to be read?
                     bytes = mmInStream.read(buffer, 0, bytes); // record how many bytes we actually read
 
-                    Log.i(TAG, new String(buffer));
+                    Log.d(TAG, new String(buffer));
+
+                    Bundle bundle = new Bundle();
+                    bundle.putString("value", new String(buffer));
+
+                    Message message = handler.obtainMessage();
+                    message.setData(bundle);
+
+                    handler.sendMessage(message);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
