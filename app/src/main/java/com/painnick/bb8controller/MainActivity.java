@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                 String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
 
-                Log.d(TAG, "FOUND '" + deviceName + "'(" + deviceHardwareAddress + ")");
+                Log.d(TAG, String.format("FOUND '%s'(%s)", deviceName, deviceHardwareAddress));
                 if (BLUETOOTH_NAME.equals(deviceName)) {
                     connectBt(deviceHardwareAddress);
                 }
