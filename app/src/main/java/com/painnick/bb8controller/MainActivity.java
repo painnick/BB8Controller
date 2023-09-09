@@ -10,10 +10,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.ViewGroup;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -137,8 +141,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.btnClearLogs).setOnClickListener(v -> {
-            TextView textBtLogs = findViewById(R.id.txtBtLogs);
-            textBtLogs.setText("");
+            TableLayout tblClearLogs = findViewById(R.id.tblClearLogs);
+            tblClearLogs.removeViews(0, tblClearLogs.getChildCount());
         });
     }
 
@@ -266,18 +270,50 @@ public class MainActivity extends AppCompatActivity {
 
             String[] lines = value.split("\n");
 
+            // https://github.com/dracula/dracula-theme
+            int defaultColor = Color.parseColor("#f8f8f2");
+            int foregroundColor = Color.parseColor("#f8f8f2");
+            int backgroundColor = Color.parseColor("Green");
+
+            if ("send".equals(cmd)) {
+                foregroundColor = Color.parseColor("#ff79c6");
+            } else if ("recv".equals(cmd)) {
+                foregroundColor = Color.parseColor("#8be9fd");
+            }
+
             // 핸들러 내에서 변경을 하기에 가능하다.
-            TextView textBtLogs = findViewById(R.id.txtBtLogs);
-            if (textBtLogs != null) {
+            TableLayout tblClearLogs = findViewById(R.id.tblClearLogs);
+            if (tblClearLogs != null) {
+                Context context = tblClearLogs.getContext();
                 for (String line : lines) {
-                    textBtLogs.append(formattedNow);
+
+                    TableRow tblRow = new TableRow(context);
+                    tblRow.setLayoutParams(new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+                    // Time
+                    TextView tvTime = new TextView(context);
+                    tvTime.setText(formattedNow);
+                    tvTime.setTextColor(defaultColor);
+                    tvTime.setTextSize(tvTime.getTextSize() * 1 / 2);
+                    tblRow.addView(tvTime);
+
+                    // Direction
+                    TextView tvDir = new TextView(context);
                     if ("send".equals(cmd)) {
-                        textBtLogs.append(" >> ");
+                        tvDir.append(" >> ");
                     } else if ("recv".equals(cmd)) {
-                        textBtLogs.append(" << ");
+                        tvDir.append(" << ");
                     }
-                    textBtLogs.append(line);
-                    textBtLogs.append("\n");
+                    tvDir.setTextColor(foregroundColor);
+                    tblRow.addView(tvDir);
+
+                    // Text
+                    TextView tvText = new TextView(context);
+                    tvText.setText(line);
+                    tvText.setTextColor(foregroundColor);
+                    tblRow.addView(tvText);
+
+                    tblClearLogs.addView(tblRow);
                 }
             }
         }
