@@ -127,8 +127,7 @@ public class MainActivity extends AppCompatActivity {
             fillPaired();
         }
 
-        Button btnClearLogs = findViewById(R.id.btnClearLogs);
-        btnClearLogs.setOnClickListener(v -> {
+        findViewById(R.id.btnClearLogs).setOnClickListener(v -> {
             TextView textBtLogs = findViewById(R.id.txtBtLogs);
             textBtLogs.setText("");
         });
