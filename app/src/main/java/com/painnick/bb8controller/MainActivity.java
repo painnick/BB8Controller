@@ -112,14 +112,14 @@ public class MainActivity extends AppCompatActivity {
                     String deviceAddress = device.getAddress();
                     String deviceName = device.getName();
 
-                    String logString = String.format("Name Changed %s Target:%s", deviceAddress, targetAddress);
+                    String logString = String.format("Name Changed %s Target:%s", deviceAddress, deviceName);
                     Log.d(TAG, logString);
 
                     foundDevices.put(deviceAddress, deviceName);
 
                     if (BLUETOOTH_NAME.equals(deviceName)) {
                         logsLayout.info(LocalTime.now(), logString);
-                        connectBt(deviceAddress);
+//                        connectBt(deviceAddress); // FIXME. 처음 발견된 항목에 대해 연결 중에 재시도가 발생
                     }
                 }
             }
