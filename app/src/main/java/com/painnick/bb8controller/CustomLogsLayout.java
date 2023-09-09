@@ -22,6 +22,7 @@ public class CustomLogsLayout extends TableLayout {
     protected int ErrorFontColor = Color.parseColor("#ff5555");
     protected int WarnFontColor = Color.parseColor("#ffb86c");
     protected int InfoFontColor = Color.parseColor("#f8f8f2");
+    protected int DebugFontColor = Color.parseColor("#6272a4");
 
     public CustomLogsLayout(Context context) {
         super(context);
@@ -48,20 +49,20 @@ public class CustomLogsLayout extends TableLayout {
         // Time
         TextView tvTime = new TextView(context);
         tvTime.setText(formattedNow);
-        tvTime.setTextColor(DefaultFontColor);
+        tvTime.setTextColor(DebugFontColor);
         tvTime.setTextSize(tvTime.getTextSize() * 1 / 2);
         tblRow.addView(tvTime);
 
         // Direction
         TextView tvDir = new TextView(context);
         tvDir.append(" DD ");
-        tvDir.setTextColor(DefaultFontColor);
+        tvDir.setTextColor(DebugFontColor);
         tblRow.addView(tvDir);
 
         // Text
         TextView tvText = new TextView(context);
         tvText.setText(msg);
-        tvText.setTextColor(DefaultFontColor);
+        tvText.setTextColor(DebugFontColor);
         tblRow.addView(tvText);
 
         addView(tblRow);
