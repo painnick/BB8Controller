@@ -117,9 +117,9 @@ public class MainActivity extends AppCompatActivity {
 
                     foundDevices.put(deviceAddress, deviceName);
 
-                    if (BLUETOOTH_NAME.equals(deviceName)) {
+                    if (BLUETOOTH_NAME.equals(deviceName) && (!deviceAddress.equals(targetAddress))) {
                         logsLayout.info(LocalTime.now(), logString);
-//                        connectBt(deviceAddress); // FIXME. 처음 발견된 항목에 대해 연결 중에 재시도가 발생
+                        connectBt(deviceAddress);
                     }
                 }
             }
