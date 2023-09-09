@@ -21,6 +21,7 @@ public class ConnectedThread extends Thread {
     private final OutputStream mmOutStream;
 
     protected Handler handler;
+    protected boolean isRun = true;
 
     public ConnectedThread(BluetoothSocket socket, Handler handler) {
         this.handler = handler;
@@ -46,7 +47,7 @@ public class ConnectedThread extends Thread {
         byte[] buffer = new byte[1024];  // buffer store for the stream
         int bytes; // bytes returned from read()
         // Keep listening to the InputStream until an exception occurs
-        while (true) {
+        while (isRun) {
             try {
                 // Read from the InputStream
                 bytes = mmInStream.available();
@@ -93,6 +94,7 @@ public class ConnectedThread extends Thread {
 
     /* Call this from the main activity to shutdown the connection */
     public void cancel() {
+        isRun = false;
         try {
             mmSocket.close();
         } catch (IOException e) {

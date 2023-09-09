@@ -24,6 +24,8 @@ import androidx.core.app.ActivityCompat;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -41,11 +43,14 @@ public class MainActivity extends AppCompatActivity {
     UUID BT_MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // "random" unique identifier
     BluetoothAdapter btAdapter;
     Set<BluetoothDevice> pairedDevices;
+    HashMap<String, String> foundDevices;
     BluetoothSocket btSocket = null;
     String targetAddress = null;
     ConnectedThread connectedThread;
     ConnectThreadHandler connectedThreadHandler;
     CustomLogsLayout logsLayout;
+
+    private Toast toast;
 
     private final BroadcastReceiver btReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -63,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
                 String logString = String.format("FOUND '%s'(%s)", deviceName, deviceHardwareAddress);
                 Log.d(TAG, logString);
 
+                foundDevices.put(deviceHardwareAddress, deviceName);
+
                 if (BLUETOOTH_NAME.equals(deviceName)) {
                     logsLayout.info(LocalTime.now(), logString);
                     connectBt(deviceHardwareAddress);
@@ -79,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if (targetAddress != null && targetAddress.equals(deviceAddress)) {
                         logsLayout.info(LocalTime.now(), logString);
-                        Toast.makeText(context, "BB-8 연결에 성공하였습니다.", Toast.LENGTH_SHORT).show();
+                        showToast(context, "BB-8 연결에 성공하였습니다.", Toast.LENGTH_SHORT);
                     } else {
                         logsLayout.debug(LocalTime.now(), logString);
                     }
@@ -94,9 +101,25 @@ public class MainActivity extends AppCompatActivity {
 
                     if (targetAddress != null && targetAddress.equals(deviceAddress)) {
                         logsLayout.info(LocalTime.now(), logString);
-                        Toast.makeText(context, "BB-8과의 연결이 종료되었습니다.", Toast.LENGTH_SHORT).show();
+                        showToast(context, "BB-8과의 연결이 종료되었습니다.", Toast.LENGTH_SHORT);
                     } else {
                         logsLayout.debug(LocalTime.now(), logString);
+                    }
+                }
+            } else if (BluetoothDevice.ACTION_NAME_CHANGED.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
+                if (device != null) {
+                    String deviceAddress = device.getAddress();
+                    String deviceName = device.getName();
+
+                    String logString = String.format("Name Changed %s Target:%s", deviceAddress, targetAddress);
+                    Log.d(TAG, logString);
+
+                    foundDevices.put(deviceAddress, deviceName);
+
+                    if (BLUETOOTH_NAME.equals(deviceName)) {
+                        logsLayout.info(LocalTime.now(), logString);
+                        connectBt(deviceAddress);
                     }
                 }
             }
@@ -108,6 +131,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        foundDevices = new HashMap<>();
+
+        connectedThreadHandler = new ConnectThreadHandler();
+
         logsLayout = new CustomLogsLayout(this);
         ScrollView vLogs = findViewById(R.id.vLogs);
         vLogs.addView(logsLayout);
@@ -117,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_NAME_CHANGED);
         registerReceiver(btReceiver, filter);
 
         ActivityCompat.requestPermissions(MainActivity.this, REQUIRED_PERMISSIONS, 1);
@@ -134,6 +162,10 @@ public class MainActivity extends AppCompatActivity {
         } else {
             checkPaired();
         }
+
+        findViewById(R.id.btnConnect).setOnClickListener(v -> {
+            findDevice();
+        });
 
         findViewById(R.id.btnHelp).setOnClickListener(v -> {
             if (connectedThread != null) {
@@ -155,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
                 checkPaired();
             } else if (resultCode == RESULT_CANCELED) {
                 logsLayout.warn(LocalTime.now(), "사용자 권한 거절 : ENABLE_BT");
-                Toast.makeText(this, "블루투스를 켜주세요.", Toast.LENGTH_SHORT).show();
+                showToast(this, "블루투스를 켜주세요.", Toast.LENGTH_SHORT);
             }
         }
     }
@@ -189,20 +221,52 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void findDevice() {
-        Toast.makeText(this, "블루투스 BB-8을 검색합니다...", Toast.LENGTH_SHORT).show();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             logsLayout.warn(LocalTime.now(), "Permission is not granted : BLUETOOTH_SCAN");
             return;
         }
-        btAdapter.cancelDiscovery();
-        logsLayout.debug(LocalTime.now(), "Stop to find BB-8...");
-        btAdapter.startDiscovery();
-        logsLayout.debug(LocalTime.now(), "Start to find BB-8...");
+
+        boolean found = false;
+        String selectedAddress = null;
+        String selectedName = null;
+        for (Map.Entry<String, String> entry : foundDevices.entrySet()) {
+            String deviceAddress = entry.getKey();
+            String deviceName = entry.getValue();
+
+            if (BLUETOOTH_NAME.equals(deviceName)) {
+                found = true;
+                selectedAddress = deviceAddress;
+                selectedName = deviceName;
+            }
+        }
+
+        if (found) {
+            String logString = String.format("FOUND '%s'(%s) from Found-List", selectedName, selectedAddress);
+            logsLayout.info(LocalTime.now(), logString);
+            connectBt(selectedAddress);
+        } else {
+            showToast(this, "BB-8을 검색합니다...", Toast.LENGTH_SHORT);
+            btAdapter.cancelDiscovery();
+            logsLayout.debug(LocalTime.now(), "Stop to find BB-8...");
+            btAdapter.startDiscovery();
+            logsLayout.debug(LocalTime.now(), "Start to find BB-8...");
+        }
     }
 
     private void connectBt(String foundAddress) {
         targetAddress = foundAddress;
         BluetoothDevice device = btAdapter.getRemoteDevice(foundAddress);
+
+        if (connectedThread != null) {
+            logsLayout.info(LocalTime.now(), "Stopping connectedThread");
+            connectedThread.cancel();
+            try {
+                connectedThread.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            connectedThread = null;
+        }
 
         boolean connected = false;
         try {
@@ -219,13 +283,13 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         if (connected) {
-            connectedThreadHandler = new ConnectThreadHandler();
             connectedThread = new ConnectedThread(btSocket, connectedThreadHandler);
             connectedThread.start();
             logsLayout.debug(LocalTime.now(), "Start BluetoothSocket");
+            showToast(this, "BB-8을 호출할 수 있습니다", Toast.LENGTH_SHORT);
         } else {
             logsLayout.error(LocalTime.now(), "Cannot create BluetoothSocket");
-            Toast.makeText(this, "블루투스 BB-8 연결에 실패하였습니다.", Toast.LENGTH_SHORT).show();
+            showToast(this, "BB-8 소켓 연결에 실패하였습니다.", Toast.LENGTH_SHORT);
         }
     }
 
@@ -249,6 +313,14 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         // Don't forget to unregister the ACTION_FOUND receiver.
         unregisterReceiver(btReceiver);
+    }
+
+    private void showToast(Context context, String text, int len) {
+        if (toast != null) {
+            toast.cancel();
+        }
+        toast = Toast.makeText(context, text, len);
+        toast.show();
     }
 
     class ConnectThreadHandler extends Handler {
