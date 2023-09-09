@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         findViewById(R.id.btnConnect).setOnClickListener(v -> {
-            findDevice();
+            checkPaired();
         });
 
         findViewById(R.id.btnHelp).setOnClickListener(v -> {
