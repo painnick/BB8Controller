@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.widget.ScrollView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -28,7 +29,6 @@ import androidx.core.app.ActivityCompat;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -50,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     String targetAddress = null;
     ConnectedThread connectedThread;
     ConnectThreadHandler connectedThreadHandler;
+    CustomLogsLayout logsLayout;
+
     private final BroadcastReceiver btReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -98,12 +100,16 @@ public class MainActivity extends AppCompatActivity {
         }
     };
     // 포맷 정의
-    DateTimeFormatter TimeFormatter = DateTimeFormatter.ofPattern("mm:ss");
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        logsLayout = new CustomLogsLayout(this);
+        ScrollView vLogs = findViewById(R.id.vLogs);
+        vLogs.addView(logsLayout);
 
         // Show paired devices
         IntentFilter filter = new IntentFilter();
@@ -141,8 +147,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.btnClearLogs).setOnClickListener(v -> {
-            TableLayout tblClearLogs = findViewById(R.id.tblClearLogs);
-            tblClearLogs.removeViews(0, tblClearLogs.getChildCount());
+            logsLayout.removeViews(0, logsLayout.getChildCount());
         });
     }
 
@@ -262,7 +267,6 @@ public class MainActivity extends AppCompatActivity {
 
             // 현재 날짜 구하기
             LocalTime now = LocalTime.now();
-            String formattedNow = now.format(TimeFormatter);
 
             Bundle bundle = msg.getData();
             String cmd = bundle.getString("cmd");
@@ -270,50 +274,13 @@ public class MainActivity extends AppCompatActivity {
 
             String[] lines = value.split("\n");
 
-            // https://github.com/dracula/dracula-theme
-            int defaultColor = Color.parseColor("#f8f8f2");
-            int foregroundColor = Color.parseColor("#f8f8f2");
-            int backgroundColor = Color.parseColor("Green");
-
-            if ("send".equals(cmd)) {
-                foregroundColor = Color.parseColor("#ff79c6");
-            } else if ("recv".equals(cmd)) {
-                foregroundColor = Color.parseColor("#8be9fd");
-            }
-
-            // 핸들러 내에서 변경을 하기에 가능하다.
-            TableLayout tblClearLogs = findViewById(R.id.tblClearLogs);
-            if (tblClearLogs != null) {
-                Context context = tblClearLogs.getContext();
+            if (logsLayout != null) {
                 for (String line : lines) {
-
-                    TableRow tblRow = new TableRow(context);
-                    tblRow.setLayoutParams(new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-                    // Time
-                    TextView tvTime = new TextView(context);
-                    tvTime.setText(formattedNow);
-                    tvTime.setTextColor(defaultColor);
-                    tvTime.setTextSize(tvTime.getTextSize() * 1 / 2);
-                    tblRow.addView(tvTime);
-
-                    // Direction
-                    TextView tvDir = new TextView(context);
                     if ("send".equals(cmd)) {
-                        tvDir.append(" >> ");
+                        logsLayout.send(now, line);
                     } else if ("recv".equals(cmd)) {
-                        tvDir.append(" << ");
+                        logsLayout.recv(now, line);
                     }
-                    tvDir.setTextColor(foregroundColor);
-                    tblRow.addView(tvDir);
-
-                    // Text
-                    TextView tvText = new TextView(context);
-                    tvText.setText(line);
-                    tvText.setTextColor(foregroundColor);
-                    tblRow.addView(tvText);
-
-                    tblClearLogs.addView(tblRow);
                 }
             }
         }
