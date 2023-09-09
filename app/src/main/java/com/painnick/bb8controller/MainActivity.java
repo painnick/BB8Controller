@@ -10,16 +10,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.ViewGroup;
 import android.widget.ScrollView;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -56,51 +51,57 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Discovery has found a device. Get the BluetoothDevice
-                // object and its info from the Intent.
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
                 assert device != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
+                    logsLayout.warn(LocalTime.now(), "Permission is not granted : BLUETOOTH_CONNECT");
                     return;
                 }
                 String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
 
-                Log.d(TAG, String.format("FOUND '%s'(%s)", deviceName, deviceHardwareAddress));
+                String logString = String.format("FOUND '%s'(%s)", deviceName, deviceHardwareAddress);
+                Log.d(TAG, logString);
+
                 if (BLUETOOTH_NAME.equals(deviceName)) {
+                    logsLayout.info(LocalTime.now(), logString);
                     connectBt(deviceHardwareAddress);
+                } else {
+                    logsLayout.debug(LocalTime.now(), logString);
                 }
             } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
                 if (device != null) {
                     String deviceAddress = device.getAddress();
-                    Log.d(TAG, String.format("CONNECT %s Target:%s", deviceAddress, targetAddress));
+
+                    String logString = String.format("CONNECT %s Target:%s", deviceAddress, targetAddress);
+                    Log.d(TAG, logString);
+
                     if (targetAddress != null && targetAddress.equals(deviceAddress)) {
+                        logsLayout.info(LocalTime.now(), logString);
                         Toast.makeText(context, "BB-8 연결에 성공하였습니다.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        logsLayout.debug(LocalTime.now(), logString);
                     }
                 }
             } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
                 if (device != null) {
                     String deviceAddress = device.getAddress();
-                    Log.d(TAG, String.format("DISCONNECT %s Target:%s", deviceAddress, targetAddress));
+
+                    String logString = String.format("DISCONNECT %s Target:%s", deviceAddress, targetAddress);
+                    Log.d(TAG, logString);
+
                     if (targetAddress != null && targetAddress.equals(deviceAddress)) {
+                        logsLayout.info(LocalTime.now(), logString);
                         Toast.makeText(context, "BB-8과의 연결이 종료되었습니다.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        logsLayout.debug(LocalTime.now(), logString);
                     }
                 }
             }
-
         }
     };
-    // 포맷 정의
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,18 +127,12 @@ public class MainActivity extends AppCompatActivity {
         if (!btAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+                logsLayout.warn(LocalTime.now(), "Permission is not granted : BLUETOOTH_CONNECT");
                 return;
             }
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         } else {
-            fillPaired();
+            checkPaired();
         }
 
         findViewById(R.id.btnHelp).setOnClickListener(v -> {
@@ -157,46 +152,52 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_OK) {
-                fillPaired();
+                checkPaired();
             } else if (resultCode == RESULT_CANCELED) {
+                logsLayout.warn(LocalTime.now(), "사용자 권한 거절 : ENABLE_BT");
                 Toast.makeText(this, "블루투스를 켜주세요.", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    protected void fillPaired() {
+    protected void checkPaired() {
         boolean found = false;
         String foundAddress = null;
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            logsLayout.warn(LocalTime.now(), "Permission is not granted : BLUETOOTH_CONNECT");
             return;
         }
         pairedDevices = btAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
-            // There are paired devices. Get the name and address of each paired device.
             for (BluetoothDevice device : pairedDevices) {
                 String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
                 if (BLUETOOTH_NAME.equals(deviceName)) {
                     found = true;
                     foundAddress = deviceHardwareAddress;
+                    logsLayout.debug(LocalTime.now(), "Found BB-8 from the paired devices");
                 }
             }
         }
         if (found) {
             connectBt(foundAddress);
         } else {
-            Toast.makeText(this, "블루투스 BB-8을 검색합니다...", Toast.LENGTH_SHORT).show();
-            btAdapter.cancelDiscovery();
-            btAdapter.startDiscovery();
+            logsLayout.debug(LocalTime.now(), "Could not find BB-8 from the paired devices");
+            findDevice();
         }
+    }
+
+    protected void findDevice() {
+        Toast.makeText(this, "블루투스 BB-8을 검색합니다...", Toast.LENGTH_SHORT).show();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            logsLayout.warn(LocalTime.now(), "Permission is not granted : BLUETOOTH_SCAN");
+            return;
+        }
+        btAdapter.cancelDiscovery();
+        logsLayout.debug(LocalTime.now(), "Stop to find BB-8...");
+        btAdapter.startDiscovery();
+        logsLayout.debug(LocalTime.now(), "Start to find BB-8...");
     }
 
     private void connectBt(String foundAddress) {
@@ -208,13 +209,7 @@ public class MainActivity extends AppCompatActivity {
             btSocket = createBluetoothSocket(device);
             if (btSocket != null) {
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
+                    logsLayout.warn(LocalTime.now(), "Permission is not granted : BLUETOOTH_CONNECT");
                     return;
                 }
                 btSocket.connect();
@@ -227,12 +222,15 @@ public class MainActivity extends AppCompatActivity {
             connectedThreadHandler = new ConnectThreadHandler();
             connectedThread = new ConnectedThread(btSocket, connectedThreadHandler);
             connectedThread.start();
+            logsLayout.debug(LocalTime.now(), "Start BluetoothSocket");
         } else {
+            logsLayout.error(LocalTime.now(), "Cannot create BluetoothSocket");
             Toast.makeText(this, "블루투스 BB-8 연결에 실패하였습니다.", Toast.LENGTH_SHORT).show();
         }
     }
 
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
+        logsLayout.debug(LocalTime.now(), "Create BluetoothSocket...");
         try {
             final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
             return (BluetoothSocket) m.invoke(device, BT_MODULE_UUID);
@@ -240,13 +238,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "Could not create Insecure RFComm Connection", e);
         }
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            logsLayout.warn(LocalTime.now(), "Permission is not granted : BLUETOOTH_CONNECT");
             return null;
         }
         return device.createRfcommSocketToServiceRecord(BT_MODULE_UUID);
@@ -274,13 +266,11 @@ public class MainActivity extends AppCompatActivity {
 
             String[] lines = value.split("\n");
 
-            if (logsLayout != null) {
-                for (String line : lines) {
-                    if ("send".equals(cmd)) {
-                        logsLayout.send(now, line);
-                    } else if ("recv".equals(cmd)) {
-                        logsLayout.recv(now, line);
-                    }
+            for (String line : lines) {
+                if ("send".equals(cmd)) {
+                    logsLayout.send(now, line);
+                } else if ("recv".equals(cmd)) {
+                    logsLayout.recv(now, line);
                 }
             }
         }
