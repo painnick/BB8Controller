@@ -173,6 +173,66 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.btnHello).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("hello");
+            }
+        });
+
+        findViewById(R.id.btnBye).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("bye");
+            }
+        });
+
+        findViewById(R.id.btnStop).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("stop");
+            }
+        });
+
+        findViewById(R.id.btnFool).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("fool");
+            }
+        });
+
+        findViewById(R.id.btnMusic).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("music");
+            }
+        });
+
+        findViewById(R.id.btnLeft).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("left");
+            }
+        });
+
+        findViewById(R.id.btnRight).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("right");
+            }
+        });
+
+        findViewById(R.id.btnLightOn).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("light on");
+            }
+        });
+
+        findViewById(R.id.btnLightOff).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("light off");
+            }
+        });
+
+        findViewById(R.id.btnLeftRandom).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("led random");
+            }
+        });
+
         findViewById(R.id.btnClearLogs).setOnClickListener(v -> {
             logsLayout.removeViews(0, logsLayout.getChildCount());
         });
