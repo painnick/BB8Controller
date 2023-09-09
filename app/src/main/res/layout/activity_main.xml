@@ -26,7 +26,7 @@
                     android:id="@+id/btnConnect"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@color/Pink"
+                    android:backgroundTint="?android:attr/colorFocusedHighlight"
                     android:text="Connect"
                     app:icon="@android:drawable/stat_sys_data_bluetooth" />
 
@@ -39,7 +39,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end|top|fill_vertical"
-                    android:backgroundTint="@color/Selection"
+                    android:backgroundTint="@android:color/system_accent2_700"
                     android:minWidth="0dip"
                     android:minHeight="0dip"
                     android:text="Help"
@@ -85,7 +85,7 @@
                 android:id="@+id/btnStop"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="@color/Red"
+                android:backgroundTint="?attr/colorError"
                 android:text="Stop"
                 android:textSize="24sp"
                 app:icon="@android:drawable/ic_delete" />
@@ -118,7 +118,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Motor"
+            android:text="Head"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -203,7 +203,7 @@
                 android:id="@+id/btnClearLogs"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="@color/Comment"
+                android:backgroundTint="@android:color/system_accent2_700"
                 android:minWidth="0dip"
                 android:minHeight="0dip"
                 android:text="Clear Logs"
