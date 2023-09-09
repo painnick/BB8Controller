@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
     static final String TAG = "Main";
 
-    static final String BLUETOOTH_NAME = "VR-Trainer";
+    static final String BLUETOOTH_NAME = "BB-8";
 
     // Get permission
     static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
