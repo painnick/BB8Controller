@@ -58,13 +58,7 @@ public class ConnectedThread extends Thread {
 
                     Log.d(TAG, new String(buffer));
 
-                    Bundle bundle = new Bundle();
-                    bundle.putString("value", new String(buffer));
-
-                    Message message = handler.obtainMessage();
-                    message.setData(bundle);
-
-                    handler.sendMessage(message);
+                    sendToHandler("recv", buffer);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -74,11 +68,25 @@ public class ConnectedThread extends Thread {
         }
     }
 
+    private void sendToHandler(String cmd, byte[] buffer) {
+        Bundle bundle = new Bundle();
+        bundle.putString("cmd", cmd);
+        bundle.putString("value", new String(buffer));
+
+        Message message = handler.obtainMessage();
+        message.setData(bundle);
+
+        handler.sendMessage(message);
+    }
+
+
     /* Call this from the main activity to send data to the remote device */
     public void write(String input) {
-        byte[] bytes = input.getBytes();           //converts entered String into bytes
+        byte[] bytes = input.getBytes(); //converts entered String into bytes
         try {
             mmOutStream.write(bytes);
+
+            sendToHandler("send", bytes);
         } catch (IOException e) {
         }
     }

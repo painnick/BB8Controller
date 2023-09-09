@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +23,9 @@ import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -44,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
     String targetAddress = null;
     ConnectedThread connectedThread;
     ConnectThreadHandler connectedThreadHandler;
-
     private final BroadcastReceiver btReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -92,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+    // 포맷 정의
+    DateTimeFormatter TimeFormatter = DateTimeFormatter.ofPattern("mm:ss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,6 +129,12 @@ public class MainActivity extends AppCompatActivity {
         } else {
             fillPaired();
         }
+
+        findViewById(R.id.btnHelp).setOnClickListener(v -> {
+            if (connectedThread != null) {
+                connectedThread.write("help");
+            }
+        });
 
         findViewById(R.id.btnClearLogs).setOnClickListener(v -> {
             TextView textBtLogs = findViewById(R.id.txtBtLogs);
@@ -247,13 +256,29 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
 
+            // 현재 날짜 구하기
+            LocalTime now = LocalTime.now();
+            String formattedNow = now.format(TimeFormatter);
+
             Bundle bundle = msg.getData();
-            String value = bundle.getString("value");
+            String cmd = bundle.getString("cmd");
+            String value = Objects.requireNonNull(bundle.getString("value")).trim();
+
+            String[] lines = value.split("\n");
 
             // 핸들러 내에서 변경을 하기에 가능하다.
             TextView textBtLogs = findViewById(R.id.txtBtLogs);
             if (textBtLogs != null) {
-                textBtLogs.append(value);
+                for (String line : lines) {
+                    textBtLogs.append(formattedNow);
+                    if ("send".equals(cmd)) {
+                        textBtLogs.append(" >> ");
+                    } else if ("recv".equals(cmd)) {
+                        textBtLogs.append(" << ");
+                    }
+                    textBtLogs.append(line);
+                    textBtLogs.append("\n");
+                }
             }
         }
     }
