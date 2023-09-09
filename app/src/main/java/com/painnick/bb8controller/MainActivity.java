@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,14 +34,7 @@ public class MainActivity extends AppCompatActivity {
     static final String BLUETOOTH_NAME = "VR-Trainer";
 
     // Get permission
-    static final String[] REQUIRED_PERMISSIONS = {
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-    };
+    static final String[] REQUIRED_PERMISSIONS = {Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
     static final int REQUEST_ENABLE_BT = 1;
     UUID BT_MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // "random" unique identifier
@@ -78,17 +72,21 @@ public class MainActivity extends AppCompatActivity {
                 }
             } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
-                String deviceAddress = device.getAddress();
-                Log.d(TAG, String.format("CONNECT %s Target:%s", deviceAddress, targetAddress));
-                if (targetAddress != null && targetAddress.equals(deviceAddress)) {
-                    Toast.makeText(context, "BB-8 연결에 성공하였습니다.", Toast.LENGTH_SHORT).show();
+                if (device != null) {
+                    String deviceAddress = device.getAddress();
+                    Log.d(TAG, String.format("CONNECT %s Target:%s", deviceAddress, targetAddress));
+                    if (targetAddress != null && targetAddress.equals(deviceAddress)) {
+                        Toast.makeText(context, "BB-8 연결에 성공하였습니다.", Toast.LENGTH_SHORT).show();
+                    }
                 }
             } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
-                String deviceAddress = device.getAddress();
-                Log.d(TAG, String.format("DISCONNECT %s Target:%s", deviceAddress, targetAddress));
-                if (targetAddress != null && targetAddress.equals(deviceAddress)) {
-                    Toast.makeText(context, "BB-8과의 연결이 종료되었습니다.", Toast.LENGTH_SHORT).show();
+                if (device != null) {
+                    String deviceAddress = device.getAddress();
+                    Log.d(TAG, String.format("DISCONNECT %s Target:%s", deviceAddress, targetAddress));
+                    if (targetAddress != null && targetAddress.equals(deviceAddress)) {
+                        Toast.makeText(context, "BB-8과의 연결이 종료되었습니다.", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
 
@@ -128,6 +126,12 @@ public class MainActivity extends AppCompatActivity {
         } else {
             fillPaired();
         }
+
+        Button btnClearLogs = findViewById(R.id.btnClearLogs);
+        btnClearLogs.setOnClickListener(v -> {
+            TextView textBtLogs = findViewById(R.id.txtBtLogs);
+            textBtLogs.setText("");
+        });
     }
 
     @Override
@@ -239,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class ConnectThreadHandler extends Handler {
+
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
@@ -247,9 +252,9 @@ public class MainActivity extends AppCompatActivity {
             String value = bundle.getString("value");
 
             // 핸들러 내에서 변경을 하기에 가능하다.
-            TextView textBtLog = findViewById(R.id.text_bt_log);
-            if (textBtLog != null) {
-                textBtLog.append(value);
+            TextView textBtLogs = findViewById(R.id.txtBtLogs);
+            if (textBtLogs != null) {
+                textBtLogs.append(value);
             }
         }
     }
