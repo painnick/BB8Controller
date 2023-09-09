@@ -27,10 +27,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@color/Pink"
-                    android:minWidth="0dip"
-                    android:minHeight="0dip"
                     android:text="Connect"
-                    android:textSize="12sp"
                     app:icon="@android:drawable/stat_sys_data_bluetooth" />
 
                 <Space
@@ -41,12 +38,12 @@
                     android:id="@+id/btnHelp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="right|top|fill_vertical"
+                    android:layout_gravity="end|top|fill_vertical"
                     android:backgroundTint="@color/Selection"
                     android:minWidth="0dip"
                     android:minHeight="0dip"
                     android:text="Help"
-                    android:textSize="11sp" />
+                    android:textSize="12sp" />
             </TableRow>
         </TableLayout>
 
@@ -54,6 +51,7 @@
             android:id="@+id/textView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="Command"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -67,18 +65,19 @@
                 android:id="@+id/btnHello"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="2dp"
-                android:text="Hello" />
+                android:layout_marginEnd="4dp"
+                android:text="Hello"
+                android:textSize="24sp" />
 
             <Button
                 android:id="@+id/btnBye"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="2dp"
-                android:text="Bye" />
+                android:text="Bye"
+                android:textSize="24sp" />
 
             <Space
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
 
@@ -88,6 +87,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="@color/Red"
                 android:text="Stop"
+                android:textSize="24sp"
                 app:icon="@android:drawable/ic_delete" />
         </LinearLayout>
 
@@ -100,15 +100,16 @@
                 android:id="@+id/btnFool"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="2dp"
-                android:text="Fool" />
+                android:layout_marginEnd="4dp"
+                android:text="Fool"
+                android:textSize="24sp" />
 
             <Button
                 android:id="@+id/btnMusic"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="2dp"
                 android:text="Music"
+                android:textSize="24sp"
                 app:icon="@android:drawable/ic_media_play" />
         </LinearLayout>
 
@@ -116,6 +117,7 @@
             android:id="@+id/textView2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="Motor"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -129,16 +131,22 @@
                 android:id="@+id/btnLeft"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="2dp"
+                android:layout_marginEnd="4dp"
                 android:text="Turn Left"
+                android:textSize="24sp"
                 app:icon="@android:drawable/ic_media_rew" />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
 
             <Button
                 android:id="@+id/btnRight"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="2dp"
                 android:text="Turn Right"
+                android:textSize="24sp"
                 app:icon="@android:drawable/ic_media_ff"
                 app:iconGravity="end" />
         </LinearLayout>
@@ -147,6 +155,7 @@
             android:id="@+id/textView3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="Light / LED"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -160,18 +169,19 @@
                 android:id="@+id/btnLightOn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="2dp"
-                android:text="Light On" />
+                android:layout_marginEnd="4dp"
+                android:text="Light On"
+                android:textSize="14sp" />
 
             <Button
                 android:id="@+id/btnLightOff"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="2dp"
-                android:text="Light Off" />
+                android:text="Light Off"
+                android:textSize="14sp" />
 
             <Space
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
 
@@ -179,14 +189,14 @@
                 android:id="@+id/btnLeftRandom"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="2dp"
-                android:text="LED(Random)" />
+                android:text="LED(Random)"
+                android:textSize="14sp" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="right"
+            android:gravity="end"
             android:orientation="horizontal">
 
             <Button
@@ -197,14 +207,14 @@
                 android:minWidth="0dip"
                 android:minHeight="0dip"
                 android:text="Clear Logs"
-                android:textSize="11sp" />
+                android:textSize="12sp" />
         </LinearLayout>
 
         <ScrollView
             android:id="@+id/vLogs"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/Background"></ScrollView>
+            android:background="@color/Background"/>
 
     </LinearLayout>
 
