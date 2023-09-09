@@ -15,8 +15,7 @@
         <TableLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:stretchColumns="1"
-            >
+            android:stretchColumns="1">
 
             <TableRow
                 android:layout_width="match_parent"
@@ -26,6 +25,8 @@
                     android:id="@+id/btnConnect"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginRight="2dp"
+                    android:backgroundTint="@color/Pink"
                     android:text="Connect BB-8" />
 
                 <Space
@@ -36,13 +37,12 @@
                     android:id="@+id/btnHelp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Help" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
+                    android:layout_gravity="right|top|fill_vertical"
+                    android:backgroundTint="@color/Selection"
+                    android:minWidth="0dip"
+                    android:minHeight="0dip"
+                    android:text="Help"
+                    android:textSize="11sp" />
             </TableRow>
 
             <TableRow
@@ -50,11 +50,23 @@
                 android:layout_height="match_parent"
                 android:gravity="right">
 
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
                 <Button
                     android:id="@+id/btnClearLogs"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Clear Logs" />
+                    android:backgroundTint="@color/Comment"
+                    android:minWidth="0dip"
+                    android:minHeight="0dip"
+                    android:text="Clear Logs"
+                    android:textSize="11sp" />
             </TableRow>
 
         </TableLayout>
@@ -63,9 +75,7 @@
             android:id="@+id/vLogs"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#282A36"
-            >
-        </ScrollView>
+            android:background="@color/Background"></ScrollView>
 
     </LinearLayout>
 
