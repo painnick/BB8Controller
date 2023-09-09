@@ -62,17 +62,17 @@ public class MainActivity extends AppCompatActivity {
                     logsLayout.warn(LocalTime.now(), "Permission is not granted : BLUETOOTH_CONNECT");
                     return;
                 }
+                String deviceAddress = device.getAddress(); // MAC address
                 String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
 
-                String logString = String.format("FOUND '%s'(%s)", deviceName, deviceHardwareAddress);
+                String logString = String.format("Found device %s(%s)", deviceName, deviceAddress);
                 Log.d(TAG, logString);
 
-                foundDevices.put(deviceHardwareAddress, deviceName);
+                foundDevices.put(deviceAddress, deviceName);
 
                 if (BLUETOOTH_NAME.equals(deviceName)) {
                     logsLayout.info(LocalTime.now(), logString);
-                    connectBt(deviceHardwareAddress);
+                    connectBt(deviceAddress);
                 } else {
                     logsLayout.debug(LocalTime.now(), logString);
                 }
@@ -80,8 +80,9 @@ public class MainActivity extends AppCompatActivity {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
                 if (device != null) {
                     String deviceAddress = device.getAddress();
+                    String deviceName = device.getName();
 
-                    String logString = String.format("CONNECT %s Target:%s", deviceAddress, targetAddress);
+                    String logString = String.format("Connected device %s(%s)", deviceName, deviceAddress);
                     Log.d(TAG, logString);
 
                     if (targetAddress != null && targetAddress.equals(deviceAddress)) {
@@ -95,8 +96,9 @@ public class MainActivity extends AppCompatActivity {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
                 if (device != null) {
                     String deviceAddress = device.getAddress();
+                    String deviceName = device.getName();
 
-                    String logString = String.format("DISCONNECT %s Target:%s", deviceAddress, targetAddress);
+                    String logString = String.format("Disconnected device %s(%s)", deviceName, deviceAddress);
                     Log.d(TAG, logString);
 
                     if (targetAddress != null && targetAddress.equals(deviceAddress)) {
@@ -112,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                     String deviceAddress = device.getAddress();
                     String deviceName = device.getName();
 
-                    String logString = String.format("Name Changed %s Target:%s", deviceAddress, deviceName);
+                    String logString = String.format("Changed device name %s Target:%s", deviceAddress, deviceName);
                     Log.d(TAG, logString);
 
                     foundDevices.put(deviceAddress, deviceName);
@@ -275,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
         if (found) {
             connectBt(foundAddress);
         } else {
-            logsLayout.debug(LocalTime.now(), "Could not find BB-8 from the paired devices");
+            logsLayout.debug(LocalTime.now(), "Cannot find BB-8 from the paired devices");
             findDevice();
         }
     }
@@ -301,15 +303,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (found) {
-            String logString = String.format("FOUND '%s'(%s) from Found-List", selectedName, selectedAddress);
+            String logString = String.format("Found %s(%s) from the found-list", selectedName, selectedAddress);
             logsLayout.info(LocalTime.now(), logString);
             connectBt(selectedAddress);
         } else {
             showToast(this, "BB-8을 검색합니다...", Toast.LENGTH_SHORT);
             btAdapter.cancelDiscovery();
-            logsLayout.debug(LocalTime.now(), "Stop to find BB-8...");
+            logsLayout.debug(LocalTime.now(), "Stop to finding BB-8");
             btAdapter.startDiscovery();
-            logsLayout.debug(LocalTime.now(), "Start to find BB-8...");
+            logsLayout.debug(LocalTime.now(), "Start to finding BB-8...");
         }
     }
 
@@ -345,16 +347,16 @@ public class MainActivity extends AppCompatActivity {
         if (connected) {
             connectedThread = new ConnectedThread(btSocket, connectedThreadHandler);
             connectedThread.start();
-            logsLayout.debug(LocalTime.now(), "Start BluetoothSocket");
+            logsLayout.debug(LocalTime.now(), "Start to connect new BluetoothSocket");
             showToast(this, "BB-8을 호출할 수 있습니다", Toast.LENGTH_SHORT);
         } else {
-            logsLayout.error(LocalTime.now(), "Cannot create BluetoothSocket");
+            logsLayout.error(LocalTime.now(), "Cannot create new BluetoothSocket");
             showToast(this, "BB-8 소켓 연결에 실패하였습니다.", Toast.LENGTH_SHORT);
         }
     }
 
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
-        logsLayout.debug(LocalTime.now(), "Create BluetoothSocket...");
+        logsLayout.debug(LocalTime.now(), "Create new BluetoothSocket...");
         try {
             final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
             return (BluetoothSocket) m.invoke(device, BT_MODULE_UUID);
